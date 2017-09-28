@@ -61,7 +61,7 @@ class CMolecule(Molecule):
         """Set the geometry"""
         self.charges = np.array([])
 
-        if geom is not None:
+        if geom:
             atoms, xyzs, charges = zip(*geom)
             Molecule.check_geom(zip(atoms, xyzs))
             self.atoms = list(atoms)
