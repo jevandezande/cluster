@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 from .cmolecule import CMolecule
 
 
@@ -111,8 +112,16 @@ class Cluster:
             form = '{:<4}' + ' {:>7.4f}' + ' {:> 13.8f}' * 3
             for atom, xyz, charge in self.br_mol:
                 out += form.format(atom + '>', charge, *xyz) + ecp + '\n'
-            for atom, xyz, charge in self.pc_mol:
-                out += form.format('Q', charge, *xyz) + '\n'
+            if 'separate_pc' in options:
+                form = '{:>7.4f}' + ' {:> 13.8f}' * 3
+                pc_out = '{}\n'.format(len(self.pc_mol))
+                for atom, xyz, charge in self.pc_mol:
+                    pc_out += form.format(charge, *xyz) + '\n'
+                with open(options['separate_pc'], 'w') as f:
+                    f.write(pc_out)
+            else:
+                for atom, xyz, charge in self.pc_mol:
+                    out += form.format('Q', charge, *xyz) + '\n'
 
             out += '*'
         else:
@@ -120,3 +129,23 @@ class Cluster:
 
         with open(outfile, 'w') as f:
             f.write(out)
+
+    def recharged(self, charge):
+        """ Change the net charge of non-qc region
+
+        Distribtutes the increased or decreased charge between the atoms of the
+        non-qc cmolecules
+
+        :param charge: new charge
+        """
+        # Duplicate cmolecules
+        qc_mol = CMolecule(self.qc_mol.geom)
+        br_mol = CMolecule(self.br_mol.geom)
+        pc_mol = CMolecule(self.pc_mol.geom)
+
+        additional_charge = (charge - self.charge)/(len(br_mol) + len(pc_mol))
+
+        br_mol.charges = br_mol.charges + additional_charge
+        pc_mol.charges = pc_mol.charges + additional_charge
+
+        return Cluster(qc_mol, br_mol, pc_mol)

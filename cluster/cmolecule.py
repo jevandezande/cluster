@@ -49,7 +49,7 @@ class CMolecule(Molecule):
     def insert(self, i, atom, xyz, charge):
         """Insert the atom in the specified position"""
         super().insert(i, atom, xyz)
-        self.charges.insert(i, charge)
+        self.charges = np.insert(self.charges, i, charge)
 
     @property
     def geom(self):
