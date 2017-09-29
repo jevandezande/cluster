@@ -80,7 +80,7 @@ class Cluster:
         """
         cmol = CMolecule.read_from(infile)
         if isinstance(groups[0], int):
-           return Cluster.generate_from_ranges(cmol, *groups)
+            return Cluster.generate_from_ranges(cmol, *groups)
         return Cluster.generate_from_indices(cmol, *groups)
 
     def write(self, outfile, label=True, style='xyz'):
@@ -97,5 +97,26 @@ class Cluster:
             out = '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'
         else:
             raise SyntaxError('Invalid style')
+        with open(outfile, 'w') as f:
+            f.write(out)
+
+    def write_input_file(self, outfile, **options):
+        out = options['header'] + '\n'
+        program = options['program']
+        if program == 'orca':
+            ecp = ' NewECP "{}" end'.format(options['ecp'])
+            form = '{:<4}' + ' {:7}' + ' {:> 13.8f}' * 3 + '\n'
+            for atom, xyz, charge in self.qc_mol:
+                out += form.format(atom, '', *xyz)
+            form = '{:<4}' + ' {:>7.4f}' + ' {:> 13.8f}' * 3
+            for atom, xyz, charge in self.br_mol:
+                out += form.format(atom + '>', charge, *xyz) + ecp + '\n'
+            for atom, xyz, charge in self.pc_mol:
+                out += form.format('Q', charge, *xyz) + '\n'
+
+            out += '*'
+        else:
+            raise Exception('{} is not yet supported'.format(program))
+
         with open(outfile, 'w') as f:
             f.write(out)

@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-
-import pytest
 import os
 import sys
+
+import pytest
+
+from pytest import approx
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 print(sys.path)
+
 from cluster.cmolecule import *
 
 
@@ -15,7 +19,7 @@ class TestCMolecule:
         assert cmol.atoms == ['H', 'O']
         assert (cmol.xyz == [[0, 0, 0], [0, 0, 1]]).all()
         assert all(cmol.charges == [0, -1])
-        assert cmol.charge == -1
+        assert cmol.charge == approx(-1)
 
         assert str(cmol) == """\
 H       0.00000000    0.00000000    0.00000000  0.0000

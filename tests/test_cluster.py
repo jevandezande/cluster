@@ -14,8 +14,9 @@ class TestCluster:
         cmol2 = CMolecule([['H', [1, 0, 0], 0],
                            ['O', [1, 0, 1],-1]])
         cmol3 = CMolecule([['H', [2, 0, 0], 0],
-                           ['F', [2, 0, 1], 0]])
+                                ['F', [2, 0, 1], 0]])
         cluster = Cluster(cmol1, cmol2, cmol3)
+
         assert cluster.atoms == ['H', 'N', 'H', 'O', 'H', 'F']
         assert (cluster.xyz == [[0, 0, 0], [0, 0, 1], [1, 0, 0], [1, 0, 1], [2, 0, 0], [2, 0, 1]]).all()
         assert all(cluster.charges == [0, 1, 0, -1, 0, 0])
@@ -37,5 +38,36 @@ F       2.00000000    0.00000000    1.00000000  0.0000"""
         assert cluster == cluster
         os.remove(tmp_file)
 
-    def test_other(self):
-        pass
+    def test_write_input_file(self):
+        cmol1 = CMolecule([['H', [0, 0, 0], 0],
+                           ['N', [0, 0, 1], 1]])
+        cmol2 = CMolecule([['H', [1, 0, 0], 0],
+                           ['O', [1, 0, 1],-1]])
+        cmol3 = CMolecule([['H', [2, 0, 0], 0],
+                                ['F', [2, 0, 1], 0]])
+        cluster = Cluster(cmol1, cmol2, cmol3)
+
+        tmp_file = 'input.dat.tmp'
+
+        options = {
+            'ecp': 'SDD',
+            'header': '! B3LYP def2-svp\n*xyz 0 1',
+            'program': 'orca',
+        }
+        cluster.write_input_file(tmp_file, **options)
+
+
+        with open(tmp_file) as f:
+            inp_res = f.read()
+        print(inp_res)
+        assert  inp_res == """! B3LYP def2-svp
+*xyz 0 1
+H               0.00000000    0.00000000    0.00000000
+N               0.00000000    0.00000000    1.00000000
+H>    0.0000    1.00000000    0.00000000    0.00000000 NewECP "SDD" end
+O>   -1.0000    1.00000000    0.00000000    1.00000000 NewECP "SDD" end
+Q     0.0000    2.00000000    0.00000000    0.00000000
+Q     0.0000    2.00000000    0.00000000    1.00000000
+*"""
+
+        os.remove(tmp_file)
