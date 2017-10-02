@@ -117,10 +117,10 @@ class Cluster:
         program = options['program']
         if program == 'orca':
             ecp = ' NewECP "{}" end'.format(options['ecp'])
-            form = '{:<4}' + ' {:7}' + ' {:> 13.8f}' * 3 + '\n'
+            form = '    {:<4}' + ' {:7}' + ' {:> 13.8f}' * 3 + '\n'
             for atom, xyz, charge in self.qc_mol:
                 out += form.format(atom, '', *xyz)
-            form = '{:<4}' + ' {:>7.4f}' + ' {:> 13.8f}' * 3
+            form = '    {:<4}' + ' {:>7.4f}' + ' {:> 13.8f}' * 3
             for atom, xyz, charge in self.br_mol:
                 out += form.format(atom + '>', charge, *xyz) + ecp + '\n'
             if 'separate_pc' in options:
