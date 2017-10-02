@@ -106,7 +106,6 @@ class CMolecule(Molecule):
             line_form = '{:<2}' + ' {:> 13.6f}' * 3 + ' {:>7.4f}'
             atoms = [line_form.format(atom, *pos, charge) for atom, xyz, charge in self]
             atoms = '\n'.join(atoms)
-            #out = header + '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'
             out = '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'
         else:
             raise SyntaxError('Invalid style')

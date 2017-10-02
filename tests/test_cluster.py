@@ -13,9 +13,9 @@ class TestCluster:
         cmol1 = CMolecule([['H', [0, 0, 0], 0],
                            ['N', [0, 0, 1], 1]])
         cmol2 = CMolecule([['H', [1, 0, 0], 0],
-                           ['O', [1, 0, 1],-1]])
+                           ['O', [1, 0, 1], -1]])
         cmol3 = CMolecule([['H', [2, 0, 0], 0],
-                                ['F', [2, 0, 1], 0]])
+                           ['F', [2, 0, 1], 0]])
         cluster = Cluster(cmol1, cmol2, cmol3)
 
         assert cluster.atoms == ['H', 'N', 'H', 'O', 'H', 'F']
@@ -43,9 +43,9 @@ F       2.00000000    0.00000000    1.00000000  0.0000"""
         cmol1 = CMolecule([['H', [0, 0, 0], 0],
                            ['N', [0, 0, 1], 1]])
         cmol2 = CMolecule([['H', [1, 0, 0], 0],
-                           ['O', [1, 0, 1],-1]])
+                           ['O', [1, 0, 1], -1]])
         cmol3 = CMolecule([['H', [2, 0, 0], 0],
-                                ['F', [2, 0, 1], 0]])
+                           ['F', [2, 0, 1], 0]])
         cluster = Cluster(cmol1, cmol2, cmol3)
 
         tmp_input_file = 'input.dat.tmp'
@@ -59,7 +59,7 @@ F       2.00000000    0.00000000    1.00000000  0.0000"""
 
         with open(tmp_input_file) as f:
             inp_res = f.read()
-        assert  inp_res == """! B3LYP def2-svp
+        assert inp_res == """! B3LYP def2-svp
 *xyz 0 1
 H               0.00000000    0.00000000    0.00000000
 N               0.00000000    0.00000000    1.00000000
@@ -74,7 +74,7 @@ Q     0.0000    2.00000000    0.00000000    1.00000000
 
         with open(tmp_input_file) as f:
             inp_res = f.read()
-        assert  inp_res == """! B3LYP def2-svp
+        assert inp_res == """! B3LYP def2-svp
 *xyz 0 1
 H               0.00000000    0.00000000    0.00000000
 N               0.00000000    0.00000000    1.00000000
@@ -92,14 +92,13 @@ O>   -1.0000    1.00000000    0.00000000    1.00000000 NewECP "SDD" end
         os.remove(tmp_input_file)
         os.remove(tmp_pc_file)
 
-
     def test_recharged(self):
         cmol1 = CMolecule([['H', [0, 0, 0], 0],
                            ['N', [0, 0, 1], 1]])
         cmol2 = CMolecule([['H', [1, 0, 0], 0],
-                           ['O', [1, 0, 1],-1]])
+                           ['O', [1, 0, 1], -1]])
         cmol3 = CMolecule([['H', [2, 0, 0], 0],
-                                ['F', [2, 0, 1], 0]])
+                           ['F', [2, 0, 1], 0]])
         cluster = Cluster(cmol1, cmol2, cmol3)
 
         recharged = cluster.recharged(4)

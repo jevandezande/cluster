@@ -15,7 +15,7 @@ from cluster.cmolecule import *
 class TestCMolecule:
     def test_init(self):
         cmol = CMolecule([['H', [0, 0, 0], 0],
-                        ['O', [0, 0, 1],-1]])
+                          ['O', [0, 0, 1], -1]])
         assert cmol.atoms == ['H', 'O']
         assert (cmol.xyz == [[0, 0, 0], [0, 0, 1]]).all()
         assert all(cmol.charges == [0, -1])
