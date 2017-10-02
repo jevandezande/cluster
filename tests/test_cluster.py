@@ -4,7 +4,7 @@ import os
 import pytest
 
 from pytest import approx
-from cluster.cluster import Cluster
+from cluster import Cluster
 from cluster.cmolecule import CMolecule
 
 
