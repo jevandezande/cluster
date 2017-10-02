@@ -52,7 +52,7 @@ F       2.00000000    0.00000000    1.00000000  0.0000"""
 
         options = {
             'ecp': 'SDD',
-            'header': '! B3LYP def2-svp\n*xyz 0 1',
+            'header': '! B3LYP def2-svp\n*xyz 0 1\n',
             'program': 'orca',
         }
         cluster.write_input_file(tmp_input_file, **options)

@@ -101,8 +101,19 @@ class Cluster:
         with open(outfile, 'w') as f:
             f.write(out)
 
-    def write_input_file(self, outfile, **options):
-        out = options['header'] + '\n'
+    def write_input_file(self, outfile='input.dat', **options):
+        """ Write an input file
+        Options:
+        program: what program style to output in
+        header: what to put in front of the cluster
+        footer: what to put after the cluster
+        ecp: capping ECP for the boundary region
+        separate_pc: location for the separate point charge file (otherwise place in input file)
+        """
+        out = ''
+        if 'header' in options:
+            out += options['header']
+
         program = options['program']
         if program == 'orca':
             ecp = ' NewECP "{}" end'.format(options['ecp'])
@@ -126,6 +137,9 @@ class Cluster:
             out += '*'
         else:
             raise Exception('{} is not yet supported'.format(program))
+
+        if 'footer' in options:
+            out += options['footer']
 
         with open(outfile, 'w') as f:
             f.write(out)
