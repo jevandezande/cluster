@@ -72,14 +72,14 @@ class Cluster:
         return charges
 
     @staticmethod
-    def read_from(infile, groups):
+    def read_from(infile, groups, charges=None):
         """Read from a file
         :param infile: file to read from
         :param groups: Atom groupings corresponding to [qc, br]
             either an integer or a setlike object
             all other atoms placed in point charge
         """
-        cmol = CMolecule.read_from(infile)
+        cmol = CMolecule.read_from(infile, charges)
         if isinstance(groups[0], int):
             return Cluster.generate_from_ranges(cmol, *groups)
         return Cluster.generate_from_indices(cmol, *groups)

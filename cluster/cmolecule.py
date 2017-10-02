@@ -74,8 +74,11 @@ class CMolecule(Molecule):
         self.charges = np.append(self.charges, charge)
 
     @staticmethod
-    def read_from(infile):
-        """Read from a file"""
+    def read_from(infile, charges=None):
+        """Read from a file
+        :param infile: file to read from
+        :param charges: list or dictionary of charges (else read from infile)
+        """
         # Attempt to read as an XYZ file
         with open(infile) as f:
             lines = f.readlines()
@@ -83,11 +86,16 @@ class CMolecule(Molecule):
             # Strip off length if provided
             lines = lines[2:]
         geom = []
-        for line in lines:
+        for i, line in enumerate(lines):
             if line.strip() == '':
                 continue
-            atom, x, y, z, charge = line.split()[:5]
-            geom.append([atom, np.array([float(x), float(y), float(z)]), float(charge)])
+            if charges is not None:
+                atom, *xyz = line.split()[:4]
+                charge = charges[atom] if isinstance(charges, dict) else charges[i]
+            else:
+                atom, *xyz, charge = line.split()[:5]
+            x, y, z = map(float, xyz)
+            geom.append([atom, np.array([x, y, z]), float(charge)])
 
         return CMolecule(geom)
 

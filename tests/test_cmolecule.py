@@ -7,7 +7,6 @@ import pytest
 from pytest import approx
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-print(sys.path)
 
 from cluster.cmolecule import *
 
@@ -37,11 +36,20 @@ O       0.00000000    0.00000000    1.00000000 -1.0000"""
         assert len(cmol) == 2
         assert cmol.charge == -9
 
+    def test_read_from(self):
+        cmol = CMolecule([['H', [0, 0, 0], 0],
+                          ['O', [0, 0, 1], -1]])
         tmp_file = 'geom.xyz.tmp'
         cmol.write(tmp_file)
         cmol2 = CMolecule.read_from(tmp_file)
         assert cmol == cmol2
+        cmol3 = CMolecule.read_from(tmp_file, charges=[5, -8])
+        assert cmol != cmol3
+        assert cmol3.charges == approx([5, -8])
+
+        cmol4 = CMolecule.read_from(tmp_file, charges={'H': 5, 'O': -8})
+        assert cmol4.charges == approx([5, -8])
+        assert cmol3 == cmol4
+
         os.remove(tmp_file)
 
-    def test_other(self):
-        pass
