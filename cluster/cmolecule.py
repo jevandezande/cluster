@@ -59,6 +59,8 @@ class CMolecule(Molecule):
     @geom.setter
     def geom(self, geom):
         """Set the geometry"""
+        self.atoms = []
+        self.xyz = np.array([])
         self.charges = np.array([])
 
         if geom:
