@@ -116,3 +116,20 @@ F       2.00000000    0.00000000    1.00000000 -2.0000"""
         assert recharged2.charge == approx(2.9)
         assert recharged2.br_mol.charges == approx(cluster.br_mol.charges + 3.9/4)
         assert recharged2.pc_mol.charges == approx(cluster.pc_mol.charges + 3.9/4)
+
+    def test_from_radii(self):
+        geom = [
+            ['H', [0, 0, 0], 0],
+            ['N', [0, 0, 0.9], 1],
+            ['H', [1, 0, 0], 0],
+            ['O', [1, 0, 1], -1],
+            ['H', [2, 0, 0], 1],
+            ['F', [2, 0, 1], -2],
+        ]
+        cmol = CMolecule(geom)
+        cluster = Cluster.from_radii(cmol, 1, 2)
+
+        assert len(cluster) == 6
+        assert cluster.qc_mol.atoms == ['H', 'N', 'H']
+        assert cluster.br_mol.atoms == ['O', 'H']
+        assert cluster.pc_mol.atoms == ['F']

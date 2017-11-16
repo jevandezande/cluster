@@ -163,3 +163,25 @@ class Cluster:
         pc_mol.charges = pc_mol.charges + additional_charge
 
         return Cluster(qc_mol, br_mol, pc_mol)
+
+    @staticmethod
+    def from_radii(cmol, qc_radius, br_radius, center=(0, 0, 0)):
+        """
+        :param cmol: a CMolecule
+        :params qc_radius, br_radius: radius of the given region
+        :param center: center of the crystal (from which the radii radiate)
+        """
+        distances = np.linalg.norm(cmol.xyz - center, axis=1)
+
+        cmols = []
+        qc_region = distances <= qc_radius
+        br_region = (qc_radius < distances) & (distances <= br_radius)
+        pc_region = br_radius < distances
+        for region in [qc_region, br_region, pc_region]:
+            new_cmol = CMolecule()
+            new_cmol.xyz = cmol.xyz[region]
+            new_cmol.atoms = list(itertools.compress(cmol.atoms, region))
+            new_cmol.charges = cmol.charges[region]
+            cmols.append(new_cmol)
+
+        return Cluster(*cmols)
