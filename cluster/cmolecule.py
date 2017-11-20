@@ -42,6 +42,16 @@ class CMolecule(Molecule):
     def __eq__(self, other):
         return super().__eq__(other) and all(self.charges == other.charges)
 
+    @staticmethod
+    def from_Molecule(mol, charges):
+        if isinstance(charges, list):
+            geom = [(atom, xyz, charge) for (atom, xyz), charge in zip(mol, charges)]
+        elif isinstance(charges, dict):
+            geom = [(atom, xyz, charges[atom]) for atom, xyz in mol]
+        else:
+            raise ValueError(f'Expected list or dict for charges, got {type(charges)}')
+        return CMolecule(geom)
+
     @property
     def charge(self):
         return sum(self.charges)

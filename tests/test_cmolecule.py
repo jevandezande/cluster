@@ -13,8 +13,9 @@ from cluster.cmolecule import *
 
 class TestCMolecule:
     def test_init(self):
-        cmol = CMolecule([['H', [0, 0, 0], 0],
-                          ['O', [0, 0, 1], -1]])
+        geom = [['H', (0, 0, 0), 0],
+                ['O', (0, 0, 1), -1]]
+        cmol = CMolecule(geom)
         assert cmol.atoms == ['H', 'O']
         assert (cmol.xyz == [[0, 0, 0], [0, 0, 1]]).all()
         assert all(cmol.charges == [0, -1])
@@ -37,8 +38,9 @@ O       0.00000000    0.00000000    1.00000000 -1.0000"""
         assert cmol.charge == -9
 
     def test_read_from(self):
-        cmol = CMolecule([['H', [0, 0, 0], 0],
-                          ['O', [0, 0, 1], -1]])
+        geom = [['H', (0, 0, 0), 0],
+                ['O', (0, 0, 1), -1]]
+        cmol = CMolecule(geom)
         tmp_file = 'geom.xyz.tmp'
         cmol.write(tmp_file)
         cmol2 = CMolecule.read_from(tmp_file)
@@ -52,4 +54,18 @@ O       0.00000000    0.00000000    1.00000000 -1.0000"""
         assert cmol3 == cmol4
 
         os.remove(tmp_file)
+
+    def test_from_Molecule(self):
+        geom = [['H', (0, 0, 0)],
+                ['O', (0, 0, 1)]]
+        mol = Molecule(geom)
+        cmol = CMolecule.from_Molecule(mol, [0, -1])
+        assert cmol.atoms == mol.atoms
+        assert approx(cmol.xyz) == mol.xyz
+        assert approx(cmol.charges) == [0, -1]
+        cmol = CMolecule.from_Molecule(mol, {'H': 0, 'O': -1})
+        assert cmol.atoms == mol.atoms
+        assert approx(cmol.charges) == [0, -1]
+        #with pytest.raises(ValueError) as e:
+        #    CMolecule.from_Molecule(mol, 'HO')
 

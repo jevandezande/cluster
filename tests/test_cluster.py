@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import os
 
+from cluster import Cluster
+from cluster.cmolecule import CMolecule
+
 import pytest
 
 from pytest import approx
-from cluster import Cluster
-from cluster.cmolecule import CMolecule
 
 
 class TestCluster:
