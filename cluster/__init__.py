@@ -1,2 +1,2 @@
 from .cluster import Cluster
-from .crystal import Crystal, RectangularCrystal
+from .cmolecule import CMolecule
