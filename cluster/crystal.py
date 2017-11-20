@@ -1,6 +1,8 @@
-import numpy as np
-import itertools
 from collections import Counter
+from qgrep.molecule import Molecule
+
+import itertools
+import numpy as np
 
 
 class Crystal:
@@ -26,8 +28,7 @@ class Crystal:
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
-        self.atoms = [atom[0] for atom in geom]
-        self.xyzs = np.array([atom[1:] for atom in geom])
+        self.molecule = Molecule(geom)
 
         counts = Counter(self.atoms)
         self.name = ''
@@ -41,15 +42,20 @@ class Crystal:
     def __repr__(self):
         return f'<Crystal({self.space_group}) {self.name}>'
 
-    def geom_str(self, ratio=True):
+    def __str__(self):
         """
         Return a string of the geometry in xyz format.
-        :param ratio: output the x, y, and z coordinates as a ratio of a, b, and c
         """
-        xyzs = self.xyzs if ratio else self.xyzs*[a, b, c]
+        out = f'{self.space_group}, {self.a}, {self.b}, {self.c}\n'
+        return out + str(self.molecule)
 
-        form = '{:<4}' + ' {:> 13.8f}' * 3
-        return '\n'.join([form.format(atom, *xyz) for atom, xyz in zip(self.atoms, xyzs)])
+    @property
+    def atoms(self):
+        return self.molecule.atoms
+
+    @property
+    def xyz(self):
+        return self.molecule.xyz
 
     @staticmethod
     def read_cif(file_name):
@@ -64,31 +70,32 @@ class Crystal:
 
     def tile(self, a1, a2, b1, b2, c1, c2, ratio=False):
         """
-        Generates a structure of the crystal with the given dimensions
+        Generates a molecule of the crystal with the given dimensions
         :params num_a, num_b, num_c: number of times to repeat along the coordinate
         :param ratio: convert from ratio to angstroms
         """
         num_a, num_b, num_c = a2 - a1, b2 - b1, c2 - c1
 
-        xyzs = self.xyzs if not ratio else self.xyzs*[self.a, self.b, self.c]
+        xyz = self.xyz if not ratio else self.xyz*[self.a, self.b, self.c]
+        tiled = Molecule()
 
         if self.space_group[0] in ['o', 't', 'c']:
-            tiled_xyzs = np.zeros((len(xyzs) * num_a * num_b * num_c, 3))
+            tiled_xyz = np.zeros((len(xyz) * num_a * num_b * num_c, 3))
             position = 0
             vector = np.array([self.a, self.b, self.c])
-            # TODO: make vector dimensions num_a x num_b x num_c x 3 and do a single add
+            # TODO: make vector dimensions num_a x num_b x num_c x 3 perform a single add
             for i in range(a1, a2):
                 for j in range(b1, b2):
                     for k in range(c1, c2):
-                        tiled_xyzs[position:position + len(xyzs), :] = xyzs + vector*(i, j, k)
-                        position += len(xyzs)
+                        tiled_xyz[position:position + len(xyz), :] = xyz + vector*(i, j, k)
+                        position += len(xyz)
 
-            form = '{:<4}' + ' {:> 13.8f}' * 3 + '\n'
-            out = ''
-            for atom, xyz in zip(self.atoms*num_a*num_b*num_c, tiled_xyzs):
-                out += form.format(atom, *xyz)
+            tiled.xyz = tiled_xyz
+            tiled.atoms = self.atoms*num_a*num_b*num_c
+        else:
+            raise NotImplementedError(f'tile() is not implemented for {space_group}.')
 
-        return out.strip()
+        return tiled
 
 
 class CubicCrystal(Crystal):
@@ -131,26 +138,27 @@ class RectangularCrystal(Crystal):
         super().__init__(a, b, c, 90, 90, 90, geom, space_group)
 
     def __repr__(self):
-        return f'<SimpleRectangularCrystal({self.space_group}) {self.name}>'
+        return f'<RectangularCrystal({self.space_group}) {self.name}>'
 
 
 if __name__ == '__main__':
-    cry = Crystal(1, 1, 1, 90, 90, 90, [['F', 0.5, 0.5, 0.5]], 'cP')
-    cube = CubicCrystal(1, [['F', 0.5]], 'cP')
-    simple = RectangularCrystal(1, 1, 1, [['H', 0, 0, 0], ['F', 0.5, 0.5, 0]], 'cP')
+    cry = Crystal(1, 1, 1, 90, 90, 90, [['F', [0.5, 0.5, 0.5]]], 'cP')
+    cube = CubicCrystal(1, [['F', [0.5, 0.5, 0.5]]], 'cP')
+    simple = RectangularCrystal(1, 1, 1, [['H', [0, 0, 0]], ['F', [0.5, 0.5, 0.5]]], 'cP')
     simple.tile(0, 2, 0, 2, 0, 2, ratio=True)
     geom = [
-        ['Ir', -2.25255,  0.00000,  0.78965],
-        ['Ir',  2.25255,  0.00000,  0.78965],
-        ['Ir',  0.00000, -2.25255, -0.78965],
-        ['Ir',  0.00000,  2.25255, -0.78965],
-        ['O' , -0.86633,  1.38622,  0.78965],
-        ['O' ,  0.86633, -1.38622,  0.78965],
-        ['O' ,  0.86633,  3.11888,  0.78965],
-        ['O' , -1.38622, -0.86633, -0.78965],
-        ['O' ,  1.38622,  0.86633, -0.78965],
-        ['O' , -3.11888,  0.86633, -0.78965],
-        ['O' ,  3.11888, -0.86633, -0.78965],
-        ['O' ,  3.63877,  1.38622,  0.78965],
+        ['Ir', [-2.25255,  0.00000,  0.78965]],
+        ['Ir', [ 2.25255,  0.00000,  0.78965]],
+        ['Ir', [ 0.00000, -2.25255, -0.78965]],
+        ['Ir', [ 0.00000,  2.25255, -0.78965]],
+        ['O' , [-0.86633,  1.38622,  0.78965]],
+        ['O' , [ 0.86633, -1.38622,  0.78965]],
+        ['O' , [ 0.86633,  3.11888,  0.78965]],
+        ['O' , [-1.38622, -0.86633, -0.78965]],
+        ['O' , [ 1.38622,  0.86633, -0.78965]],
+        ['O' , [-3.11888,  0.86633, -0.78965]],
+        ['O' , [ 3.11888, -0.86633, -0.78965]],
+        ['O' , [ 3.63877,  1.38622,  0.78965]],
     ]
     IrO2 = RectangularCrystal(4.5051, 4.5051, 3.1586, geom, 'cP')
+    IrO2.tile(0, 2, 0, 2, 0, 2)
