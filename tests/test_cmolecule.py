@@ -66,6 +66,6 @@ O       0.00000000    0.00000000    1.00000000 -1.0000"""
         cmol = CMolecule.from_Molecule(mol, {'H': 0, 'O': -1})
         assert cmol.atoms == mol.atoms
         assert approx(cmol.charges) == [0, -1]
-        #with pytest.raises(ValueError) as e:
-        #    CMolecule.from_Molecule(mol, 'HO')
+        with pytest.raises(ValueError) as e:
+            CMolecule.from_Molecule(mol, 'HO')
 

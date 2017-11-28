@@ -4,7 +4,7 @@ from qgrep.molecule import Molecule
 
 class CMolecule(Molecule):
     def __init__(self, geom=None):
-        """ Simple molecule class
+        """ Molecule with charges on all atoms
 
         :param geom: List of lists ordered as [[atom, [x, y, z], charge], ...]
         """
@@ -23,11 +23,11 @@ class CMolecule(Molecule):
             yield atom, xyz, charge
 
     def __getitem__(self, i):
-        """Returns the ith atom"""
+        """Returns the name, coordinates and charge of the ith atom"""
         return (self.atoms[i], self.xyz[i], self.charges[i])
 
     def __setitem__(self, i, atom_xyz_charge):
-        """Sets the ith atom"""
+        """Sets the ith atom name, coordinates, and charge"""
         atom, xyz, charge = atom_xyz_charge
         Molecule.check_atom(atom, xyz)
         self.atoms[i] = atom
@@ -44,6 +44,12 @@ class CMolecule(Molecule):
 
     @staticmethod
     def from_Molecule(mol, charges):
+        """
+        Generate a CMolecule from a Molecule
+        :param mol: a Molecule
+        :param charges: dictionary containing charges for every atom based on atom name
+                        list of charges based on atom index
+        """
         if isinstance(charges, list):
             geom = [(atom, xyz, charge) for (atom, xyz), charge in zip(mol, charges)]
         elif isinstance(charges, dict):
@@ -54,6 +60,7 @@ class CMolecule(Molecule):
 
     @property
     def charge(self):
+        """ Overall charge of the molecule """
         return sum(self.charges)
 
     def insert(self, i, atom, xyz, charge):
@@ -112,8 +119,7 @@ class CMolecule(Molecule):
         return CMolecule(geom)
 
     def write(self, outfile="geom.xyz", label=True, style='xyz'):
-        """
-        Writes the geometry to the specified file
+        """ Writes the geometry to the specified file
         Prints the size at the beginning if desired (to conform to XYZ format)
         """
         out = ''
