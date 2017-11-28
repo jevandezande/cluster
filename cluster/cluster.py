@@ -6,6 +6,10 @@ from .cmolecule import CMolecule
 class Cluster:
     def __init__(self, qc_mol, br_mol, pc_mol):
         """ Cluster model for X-ray computations
+        All mols are CMolecules
+        :param qc_mol: quantum region
+        :param br_mol: boundary region (where a capped ECP will be placed)
+        :param pc_mol: point charge region
         """
         self.qc_mol = qc_mol
         self.br_mol = br_mol
@@ -13,6 +17,9 @@ class Cluster:
 
     @staticmethod
     def generate_from_ranges(cmol, qc, br):
+        """ Generate a cluster from a CMolecule and starting indices
+        :params qc, br: start of the corresponding regions
+        """
         assert qc >= 0
         assert qc <= br
         assert br <= len(cmol)
@@ -20,9 +27,17 @@ class Cluster:
 
     @staticmethod
     def generate_from_indices(cmol, qc, br):
+        """ Generate a cluster from a CMolecule and indices
+        :params qc, br: corresponding regions
+        Everything else is point charges.
+        """
         qc_geom = []
         br_geom = []
         pc_geom = []
+        overlap = set(qc) & set(br)
+        if overlap:
+            raise ValueError(f'Overlapping regions: {overlap}')
+
         for i, (atom, xyz, charge) in enumerate(cmol):
             if i in qc:
                 qc_geom.append([atom, xyz, float(charge)])
@@ -103,7 +118,7 @@ class Cluster:
 
     def write_input_file(self, outfile='input.dat', **options):
         """ Write an input file
-        Options:
+        Options
         program: what program style to output in
         header: what to put in front of the cluster
         footer: what to put after the cluster
@@ -166,7 +181,8 @@ class Cluster:
 
     @staticmethod
     def from_radii(cmol, qc_radius, br_radius, center=(0, 0, 0)):
-        """
+        """ Generates a cluster from regions defined by radii
+
         :param cmol: a CMolecule
         :params qc_radius, br_radius: radius of the given region
         :param center: center of the crystal (from which the radii radiate)
@@ -182,6 +198,49 @@ class Cluster:
             new_cmol.xyz = cmol.xyz[region]
             new_cmol.atoms = list(itertools.compress(cmol.atoms, region))
             new_cmol.charges = cmol.charges[region]
+            cmols.append(new_cmol)
+
+        return Cluster(*cmols)
+
+    @staticmethod
+    def from_rectangles(cmol, qc, br, center=(0, 0, 0)):
+        """ Generates a cluster from regions defined by rectangular prisms
+
+        :param cmol: a CMolecule
+        :params qc, br: tuple(x, y, z) magnitude of cutoff (exclusive)
+        :param center: center of the crystal from which the regions are generated
+
+        +---+---+---+---+---+
+        | * | * | * | * | * |
+        +---+---+---+---+---+
+        | * | b | b | b | * |
+        +---+---+---+---+---+  * point charge region
+        | * | b | q | b | * |  b boundary region
+        +---+---+---+---+---+  q quantum region
+        | * | b | b | b | * |
+        +---+---+---+---+---+
+        | * | * | * | * | * |
+        +---+---+---+---+---+
+        """
+        center = np.array(center)
+
+        def inside_indices(cmol, abc):
+
+            def inside(xyz, abc):
+                for coord, region in zip(xyz, abc):
+                    if coord <= -region or region <= coord:
+                        return False
+                return True
+
+            return {i for i, xyz in enumerate(cmol.xyz) if inside(xyz, abc)}
+
+        qc_indices = inside_indices(cmol, qc - center)
+        br_indices = inside_indices(cmol, br - center) - qc_indices
+        pc_indices = set(range(len(cmol))) - qc_indices - br_indices
+
+        cmols = []
+        for indices in qc_indices, br_indices, pc_indices:
+            new_cmol = CMolecule([data for i, data in enumerate(cmol) if i in indices])
             cmols.append(new_cmol)
 
         return Cluster(*cmols)

@@ -2,6 +2,7 @@
 import os
 
 from cluster import Cluster
+from cluster.crystal import Crystal
 from cluster.cmolecule import CMolecule
 
 import pytest
@@ -134,3 +135,15 @@ F       2.00000000    0.00000000    1.00000000 -2.0000"""
         assert cluster.qc_mol.atoms == ['H', 'N', 'H']
         assert cluster.br_mol.atoms == ['O', 'H']
         assert cluster.pc_mol.atoms == ['F']
+
+    def test_from_rectangles(self):
+        geom = [['H', (0.5, 0.5, 0.5)], ['F', (0, 0, 0)]]
+        cry = Crystal(1, 1, 1, 90, 90, 90, geom, 'cP')
+        mol = cry.tile(-10, 10, -10, 10, -10, 10)
+        cmol = CMolecule.from_Molecule(mol, charges={'H': 1, 'F': -1})
+        cluster = Cluster.from_rectangles(cmol, (1, 1, 1), (2, 2, 2), center=(0, 0, 0))
+
+        assert len(cluster.qc_mol) == 9
+        assert len(cluster.br_mol) == 82
+        assert len(cluster.pc_mol) == 15909
+        assert cluster.charge == 0
