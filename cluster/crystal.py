@@ -13,14 +13,14 @@ class Crystal:
     ]
 
     def __init__(self, a, b, c, alpha, beta, gamma, geom, space_group):
-        """
+        """ A perfect crystal
         :params a, b, c, alpha, beta, gamma: crystal parameters
-        :param geom: atoms and their locations within the cell
+        :param geom: unique atoms and their locations within the cell
             Warning: all atoms must be within the region [0, a), [0, b), [0, c)
-        :param space_group: the space group the crystal belongs
+        :param space_group: the space group the crystal belongs to
             Warning: currently uses Pearson symbols, which do not uniquely
             identify the space group
-            TODO: use Schönflies notation
+            TODO: use Schönflies notation or some other method
         """
         self.a = a
         self.b = b
@@ -43,22 +43,22 @@ class Crystal:
         return f'<Crystal({self.space_group}) {self.name}>'
 
     def __str__(self):
-        """
-        Return a string of the geometry in xyz format.
-        """
-        out = f'{self.space_group}, {self.a}, {self.b}, {self.c}\n'
-        return out + str(self.molecule)
+        """ String of the geometry in xyz format """
+        return f'{self.space_group}, {self.a}, {self.b}, {self.c}\n{self.molecule}'
 
     @property
     def atoms(self):
+        """ Unique atoms in crystal """
         return self.molecule.atoms
 
     @property
     def xyz(self):
+        """ Coordinates of unique atoms """
         return self.molecule.xyz
 
     @staticmethod
     def read_cif(file_name):
+        """ Read a cif file """
         raise NotImplementedError()
 
         with open(file_name) as f:
@@ -69,9 +69,8 @@ class Crystal:
                 continue
 
     def tile(self, a1, a2, b1, b2, c1, c2, ratio=False):
-        """
-        Generates a molecule of the crystal with the given dimensions
-        :params num_a, num_b, num_c: number of times to repeat along the coordinate
+        """ Generates a molecule of the crystal with the given dimensions
+        :params a1, a2, b1, b2, c1, c2: start and end in each direction
         :param ratio: convert from ratio to angstroms
         """
         num_a, num_b, num_c = a2 - a1, b2 - b1, c2 - c1
@@ -100,10 +99,12 @@ class Crystal:
 
 class CubicCrystal(Crystal):
     def __init__(self, a, geom, space_group):
-        """
-        A cubic crystal (a=b=c) (cP, cI, cF)
+        """ A cubic crystal (a=b=c)
         :param a: cube length
         :param geom: atoms and their locations within the cell
+        :param space_group: the space group the crystal belongs to (cP, cI, cF)
+            Warning: currently uses Pearson symbols, which do not uniquely
+            identify the space group
         """
         if space_group not in ['cP', 'cI', 'cF']:
             raise ValueError('Invalid space group for CubicCrystal')
@@ -121,8 +122,7 @@ class RectangularCrystal(Crystal):
     ]
 
     def __init__(self, a, b, c, geom, space_group):
-        """
-        Any crystal with all angles equal to 90°:
+        """ A crystal with all angles equal to 90°:
             orthorhombic (a≠b≠c) (oP, oS, oI, oF)
             tetragonal   (a=b≠c) (tP, tI)
             cubic        (a=b=c) (cP, cI, cF)
@@ -130,6 +130,9 @@ class RectangularCrystal(Crystal):
         This mostly exists because I don't know much about space groups, and
         want a simplified system that works for me
         :params a, b, c: crystal parameters
+        :param space_group: the space group the crystal belongs to
+            Warning: currently uses Pearson symbols, which do not uniquely
+            identify the space group
         """
         if space_group not in ['oP', 'oS', 'oI', 'oF',
                                'tP', 'tI',

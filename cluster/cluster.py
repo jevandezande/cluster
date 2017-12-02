@@ -6,11 +6,15 @@ from .cmolecule import CMolecule
 class Cluster:
     def __init__(self, qc_mol, br_mol, pc_mol):
         """ Cluster model for X-ray computations
-        All mols are CMolecules
+        All mols must be CMolecules
         :param qc_mol: quantum region
         :param br_mol: boundary region (where a capped ECP will be placed)
         :param pc_mol: point charge region
         """
+        assert isinstance(qc_mol, CMolecule)
+        assert isinstance(br_mol, CMolecule)
+        assert isinstance(pc_mol, CMolecule)
+
         self.qc_mol = qc_mol
         self.br_mol = br_mol
         self.pc_mol = pc_mol
@@ -31,6 +35,9 @@ class Cluster:
         :params qc, br: corresponding regions
         Everything else is point charges.
         """
+        assert all([q <= len(cmol) for q in qc])
+        assert all([q <= len(cmol) for q in br])
+
         qc_geom = []
         br_geom = []
         pc_geom = []
@@ -48,23 +55,44 @@ class Cluster:
 
         return Cluster(CMolecule(qc_geom), CMolecule(br_geom), CMolecule(pc_geom))
 
+    def __repr__(self):
+        """ Representation of cluster containing the number of atoms in each region """
+        return f'<Cluster {len(self.qc_mol)}/{len(self.br_mol)}/{len(self.pc_mol)}>'
+
     def __str__(self):
-        return '{}\n{}\n{}'.format(self.qc_mol, self.br_mol, self.pc_mol)
+        """ String of the geometry in xyz style, filling out positions with
+        zeros and spaces as needed
+        """
+        return self.str(sep=False)
+
+    def str(self, sep=False):
+        """ String of the geometry in xyz style, filling out positions with zeros
+        and spaces as needed
+        :param sep: add a separator between sections
+        """
+        dashes = '-'*54 + '\n' if sep else ''
+        return f'{self.qc_mol}\n{dashes}{self.br_mol}\n{dashes}{self.pc_mol}'
 
     def __len__(self):
+        """
+        Total number of atoms
+        """
         return len(self.qc_mol.atoms) + len(self.br_mol.atoms) + len(self.pc_mol.atoms)
 
     def __iter__(self):
+        """ Iterate over all atoms """
         yield from self.qc_mol
         yield from self.br_mol
         yield from self.pc_mol
 
     @property
     def atoms(self):
+        """ List of all atoms """
         return self.qc_mol.atoms + self.br_mol.atoms + self.pc_mol.atoms
 
     @property
     def xyz(self):
+        """ np.array of all coordinates """
         xyz = np.zeros((len(self), 3))
 
         xyz[:len(self.qc_mol), ...] = self.qc_mol.xyz
@@ -75,10 +103,14 @@ class Cluster:
 
     @property
     def charge(self):
+        """ Total charge of the system """
         return sum(self.charges)
 
     @property
     def charges(self):
+        """ np.array of the charges on the atoms
+        Note: this will include the charge on the qc region atoms as well
+        """
         charges = np.zeros(len(self))
         charges[:len(self.qc_mol), ...] = self.qc_mol.charges
         charges[len(self.qc_mol):len(self.qc_mol) + len(self.br_mol), ...] = self.br_mol.charges
@@ -88,25 +120,31 @@ class Cluster:
 
     @staticmethod
     def read_from(infile, groups, charges=None):
-        """Read from a file
+        """ Read from a file
         :param infile: file to read from
         :param groups: Atom groupings corresponding to [qc, br]
             either an integer or a setlike object
             all other atoms placed in point charge
+        :param charges: list or dictionary of charges (else read from infile)
         """
         cmol = CMolecule.read_from(infile, charges)
         if isinstance(groups[0], int):
             return Cluster.generate_from_ranges(cmol, *groups)
         return Cluster.generate_from_indices(cmol, *groups)
 
-    def write(self, outfile, label=True, style='xyz'):
+    def write(self, outfile, style='xyz', xyzlabel=True):
+        """ Write to a file
+        :param outfile: file to write to
+        :param style: xyz or latex style output
+        :param xyzlabel: label xyz coordinates (i.e. put number of atoms at top)
+        """
         out = ''
         if style == 'xyz':
-            if label:
-                out += '{}\n\n'.format(len(self))
+            if xyzlabel:
+                out += f'{len(self)}\n\n'
             out += str(self)
         elif style == 'latex':
-            header = '{}\\\\\n'.format(len(self))
+            header = f'{len(self)}\\\\\n'
             line_form = '{:<2}' + ' {:> 13.6f}' * 3 + ' {:>7.4f}'
             atoms = [line_form.format(atom, *pos, charge) for atom, xyz, charge in self]
             atoms = '\n'.join(atoms)
@@ -129,18 +167,20 @@ class Cluster:
         if 'header' in options:
             out += options['header']
 
-        program = options['program']
-        if program == 'orca':
-            ecp = ' NewECP "{}" end'.format(options['ecp'])
-            form = '    {:<4}' + ' {:7}' + ' {:> 13.8f}' * 3 + '\n'
+        if options['program'] == 'orca':
+            ecp = f' NewECP "{options["ecp"]}" end'
+
+            form = '    {:<4}' + ' '*8 + ' {:> 13.8f}' * 3 + '\n'
             for atom, xyz, charge in self.qc_mol:
-                out += form.format(atom, '', *xyz)
+                out += form.format(atom, *xyz)
+
             form = '    {:<4}' + ' {:>7.4f}' + ' {:> 13.8f}' * 3
             for atom, xyz, charge in self.br_mol:
                 out += form.format(atom + '>', charge, *xyz) + ecp + '\n'
+
             if 'separate_pc' in options:
                 form = '{:>7.4f}' + ' {:> 13.8f}' * 3
-                pc_out = '{}\n'.format(len(self.pc_mol))
+                pc_out = f'{len(self.pc_mol)}\n'
                 for atom, xyz, charge in self.pc_mol:
                     pc_out += form.format(charge, *xyz) + '\n'
                 with open(options['separate_pc'], 'w') as f:
@@ -150,8 +190,9 @@ class Cluster:
                     out += form.format('Q', charge, *xyz) + '\n'
 
             out += '*'
+
         else:
-            raise Exception('{} is not yet supported'.format(program))
+            raise Exception(f'{options["program"]} is not yet supported')
 
         if 'footer' in options:
             out += options['footer']
@@ -162,12 +203,12 @@ class Cluster:
     def recharged(self, charge):
         """ Change the net charge of non-qc region
 
-        Distribtutes the increased or decreased charge between the atoms of the
-        non-qc cmolecules
+        Distributes the increased or decreased charge between the atoms of the
+        non-qc CMolecules
 
         :param charge: new charge
         """
-        # Duplicate cmolecules
+        # Duplicate CMolecules
         qc_mol = CMolecule(self.qc_mol.geom)
         br_mol = CMolecule(self.br_mol.geom)
         pc_mol = CMolecule(self.pc_mol.geom)

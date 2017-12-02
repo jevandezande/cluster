@@ -5,14 +5,12 @@ from qgrep.molecule import Molecule
 class CMolecule(Molecule):
     def __init__(self, geom=None):
         """ Molecule with charges on all atoms
-
         :param geom: List of lists ordered as [[atom, [x, y, z], charge], ...]
         """
         self.geom = geom
 
     def __str__(self):
-        """
-        Returns a string of the geometry, filling out positions with zeros and
+        """ A string of the geometry, filling out positions with zeros and
         spaces as needed
         """
         form = '{:<4}' + ' {:> 13.8f}' * 3 + ' {:>7.4f}'
@@ -23,11 +21,11 @@ class CMolecule(Molecule):
             yield atom, xyz, charge
 
     def __getitem__(self, i):
-        """Returns the name, coordinates and charge of the ith atom"""
+        """ Name, coordinates and charge of the ith atom """
         return (self.atoms[i], self.xyz[i], self.charges[i])
 
     def __setitem__(self, i, atom_xyz_charge):
-        """Sets the ith atom name, coordinates, and charge"""
+        """ Sets the ith atom name, coordinates, and charge """
         atom, xyz, charge = atom_xyz_charge
         Molecule.check_atom(atom, xyz)
         self.atoms[i] = atom
@@ -35,20 +33,20 @@ class CMolecule(Molecule):
         self.charges[i] = charge
 
     def __delitem__(self, i):
-        """Deletes the ith atom"""
+        """ Deletes the ith atom from the CMolecule """
         super().__delitem__(i)
         self.charges = np.delete(self.charges, i)
 
     def __eq__(self, other):
+        """ Checks if CMolecules are (exactly) equivalent """
         return super().__eq__(other) and all(self.charges == other.charges)
 
     @staticmethod
     def from_Molecule(mol, charges):
-        """
-        Generate a CMolecule from a Molecule
+        """ Generate a CMolecule from a Molecule
         :param mol: a Molecule
-        :param charges: dictionary containing charges for every atom based on atom name
-                        list of charges based on atom index
+        :param charges: list of charges based on atom index or
+            dictionary containing charges for every atom based on atom name
         """
         if isinstance(charges, list):
             geom = [(atom, xyz, charge) for (atom, xyz), charge in zip(mol, charges)]
@@ -64,18 +62,18 @@ class CMolecule(Molecule):
         return sum(self.charges)
 
     def insert(self, i, atom, xyz, charge):
-        """Insert the atom in the specified position"""
+        """ Insert the atom in the ith position """
         super().insert(i, atom, xyz)
         self.charges = np.insert(self.charges, i, charge)
 
     @property
     def geom(self):
-        """Return the geometry"""
+        """ Return the geometry """
         return [[atom, list(xyz), charge] for atom, xyz, charge in self]
 
     @geom.setter
     def geom(self, geom):
-        """Set the geometry"""
+        """ Set the geometry """
         self.atoms = []
         self.xyz = np.array([])
         self.charges = np.array([])
@@ -88,13 +86,13 @@ class CMolecule(Molecule):
             self.charges = np.array(charges)
 
     def append(self, atom, xyz, charge):
-        """Append atom to geometry"""
+        """ Append atom to CMolecule """
         super().append(atom, xyz)
         self.charges = np.append(self.charges, charge)
 
     @staticmethod
     def read_from(infile, charges=None):
-        """Read from a file
+        """ Read from a file
         :param infile: file to read from
         :param charges: list or dictionary of charges (else read from infile)
         """
@@ -118,22 +116,22 @@ class CMolecule(Molecule):
 
         return CMolecule(geom)
 
-    def write(self, outfile="geom.xyz", label=True, style='xyz'):
+    def write(self, outfile='geom.xyz', style='xyz', xyzlabel=True):
         """ Writes the geometry to the specified file
+        :param outfile: file to write to
+        :param style: xyz or latex style output
+        :param xyzlabel: label xyz coordinates (i.e. put number of atoms at top)
         Prints the size at the beginning if desired (to conform to XYZ format)
         """
         out = ''
         if style == 'xyz':
-            if label:
-                out += '{}\n\n'.format(len(self))
+            if xyzlabel:
+                out += f'{len(self)}\n\n'
             out += str(self)
         elif style == 'latex':
-            header = '{}\\\\\n'.format(len(self))
-            line_form = '{:<2}' + ' {:> 13.6f}' * 3 + ' {:>7.4f}'
-            atoms = [line_form.format(atom, *pos, charge) for atom, xyz, charge in self]
-            atoms = '\n'.join(atoms)
-            out = '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'
+            out += '\\begin{verbatim}\n' + str(self) + '\n\\end{verbatim}'
         else:
             raise SyntaxError('Invalid style')
+
         with open(outfile, 'w') as f:
             f.write(out)
