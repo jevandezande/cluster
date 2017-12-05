@@ -232,8 +232,8 @@ class Cluster:
 
         cmols = []
         qc_region = distances <= qc_radius
-        br_region = (qc_radius < distances) & (distances <= br_radius)
-        pc_region = br_radius < distances
+        br_region = ~qc_region & (distances <= br_radius)
+        pc_region = ~ (qc_region | br_region)
         for region in [qc_region, br_region, pc_region]:
             new_cmol = CMolecule()
             new_cmol.xyz = cmol.xyz[region]
