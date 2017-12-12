@@ -49,24 +49,38 @@ F       0.00000000    0.00000000    0.00000000"""
 
         assert cry.tile(0, 2, 0, 2, 0, 2) == mol
 
-    def test_tile_cut(self):
+    def test_tile_cuts(self):
         geom = [['H', (0.5, 0.5, 0.5)], ['F', (0, 0, 0)]]
         cry = Crystal(1, 1, 1, 90, 90, 90, geom, 'cP')
 
         # Cut at long distance (thus not cutting)
-        assert Molecule(geom) == cry.tile(0, 1, 0, 1, 0, 1, cut=[(9, 9, 9), (1, 1, 1)])
+        cuts = [[(9, 9, 9), (1, 1, 1)]]
+        assert Molecule(geom) == cry.tile(0, 1, 0, 1, 0, 1, cuts=cuts)
+
+        # Cut multiple times at long distance (thus not cutting)
+        cuts = [[(9, 9, 9), (1, 1, 1)], [(-9, -9, -9), (-1, -1, -1)]]
+        assert Molecule(geom) == cry.tile(0, 1, 0, 1, 0, 1, cuts=cuts)
 
         # Cut everything
-        assert Molecule() == cry.tile(-1, 1, -1, 1, -1, 1, cut=[(-9, -9, -9), (1, 1, 1)])
+        cuts = [[(-9, -9, -9), (1, 1, 1)]]
+        assert Molecule() == cry.tile(-1, 1, -1, 1, -1, 1, cuts=cuts)
 
         # Cut off extra tiling
-        assert Molecule(geom) == cry.tile(0, 9, 0, 1, 0, 1, cut=[(1, 0, 0), (1, 0, 0)])
+        cuts = [[(1, 0, 0), (1, 0, 0)]]
+        assert Molecule(geom) == cry.tile(0, 9, 0, 1, 0, 1, cuts=cuts)
 
         # Cut off plane
-        assert len(cry.tile(0, 9, 0, 9, 0, 9, cut=[(0, 1, 0), (0, 1, 0)])) == 162
+        cuts = [[(0, 1, 0), (0, 1, 0)]]
+        assert len(cry.tile(0, 9, 0, 9, 0, 9, cuts=cuts)) == 162
 
         # Cut off plane2
-        assert len(cry.tile(-2, 2, -2, 2, -2, 2, cut=[(0, 0, 0), (1, 1, 1)])) == 76
+        cuts = [[(0, 0, 0), (1, 1, 1)]]
+        assert len(cry.tile(-2, 2, -2, 2, -2, 2, cuts=cuts)) == 76
+
+        # Cut off all but the central atom
+        cuts = [[(0.1, 0.1, 0.1), (1, 1, 1)], [(0.1, 0.1, -0.1), (1, 1, -1)], [(0.1, -0.1, 0.1), (1, -1, 1)], [(-0.1, 0.1, 0.1), (-1, 1, 1)], [(-0.1, -0.1, -0.1), (-1, -1, -1)]]
+        tiled = cry.tile(-2, 2, -2, 2, -2, 2, cuts=cuts)
+        assert Molecule([['F', (0, 0, 0)]]) == tiled
 
 
 class TestCubicCrystal:
