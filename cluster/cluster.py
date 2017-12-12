@@ -64,15 +64,17 @@ class Cluster:
         """ String of the geometry in xyz style, filling out positions with
         zeros and spaces as needed
         """
-        return self.str(sep=False)
+        return self.str(sep=False, pc_region=True)
 
-    def str(self, sep=False):
-        """ String of the geometry in xyz style, filling out positions with zeros
-        and spaces as needed
+    def str(self, sep=False, pc_region=True):
+        """ String of the geometry in xyz style, filling out positions with
+        zeros and spaces as needed
         :param sep: add a separator between sections
+        :param pc_region: include pc_region in output
         """
         dashes = '-'*54 + '\n' if sep else ''
-        return f'{self.qc_mol}\n{dashes}{self.br_mol}\n{dashes}{self.pc_mol}'
+        pc = f'{dashes}{self.pc_mol}' if pc_region else ''
+        return f'{self.qc_mol}\n{dashes}{self.br_mol}\n{pc}'
 
     def __len__(self):
         """
