@@ -68,10 +68,12 @@ class Crystal:
             if line[0] == '#':
                 continue
 
-    def tile(self, a1, a2, b1, b2, c1, c2, ratio=False):
+    def tile(self, a1, a2, b1, b2, c1, c2, ratio=False, cut=None):
         """ Generates a molecule of the crystal with the given dimensions
         :params a1, a2, b1, b2, c1, c2: start and end in each direction
         :param ratio: convert from ratio to angstroms
+        :param cut: two tuples of point and normal vector defining a plane
+            WARNING: will eventually be changed to crystal face notation
         """
         num_a, num_b, num_c = a2 - a1, b2 - b1, c2 - c1
 
@@ -79,20 +81,32 @@ class Crystal:
         tiled = Molecule()
 
         if self.space_group[0] in ['o', 't', 'c']:
-            tiled_xyz = np.zeros((len(xyz) * num_a * num_b * num_c, 3))
+            atoms = self.atoms*num_a*num_b*num_c
+            tiled_xyz = np.zeros((len(atoms), 3))
+            cell_size = np.array([self.a, self.b, self.c])
             position = 0
-            vector = np.array([self.a, self.b, self.c])
             # TODO: make vector dimensions num_a x num_b x num_c x 3 perform a single add
             for i in range(a1, a2):
                 for j in range(b1, b2):
                     for k in range(c1, c2):
-                        tiled_xyz[position:position + len(xyz), :] = xyz + vector*(i, j, k)
+                        tiled_xyz[position:position + len(xyz), :] = xyz + cell_size*(i, j, k)
                         position += len(xyz)
-
-            tiled.xyz = tiled_xyz
-            tiled.atoms = self.atoms*num_a*num_b*num_c
         else:
             raise NotImplementedError(f'tile() is not implemented for {space_group}.')
+
+        if cut is not None:
+            (x0, y0, z0), (a, b, c) = cut
+            cut_xyz = []
+            cut_atoms = []
+            for atom, (x, y, z) in zip(atoms, tiled_xyz):
+                if a*(x - x0) + b*(y - y0) + c*(z - z0) < 0:
+                    cut_xyz.append((x, y, z))
+                    cut_atoms.append(atom)
+            tiled_xyz = np.array(cut_xyz)
+            atoms = cut_atoms
+
+        tiled.xyz = tiled_xyz
+        tiled.atoms = atoms
 
         return tiled
 

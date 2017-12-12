@@ -33,7 +33,9 @@ F       0.00000000    0.00000000    0.00000000"""
     def test_tile(self):
         geom = [['H', (0.5, 0.5, 0.5)], ['F', (0, 0, 0)]]
         cry = Crystal(1, 1, 1, 90, 90, 90, geom, 'cP')
+
         assert Molecule(geom) == cry.tile(0, 1, 0, 1, 0, 1)
+
         xyz = []
         for i in range(2):
             for j in range(2):
@@ -46,6 +48,25 @@ F       0.00000000    0.00000000    0.00000000"""
         mol.atoms = ['H', 'F'] * 8
 
         assert cry.tile(0, 2, 0, 2, 0, 2) == mol
+
+    def test_tile_cut(self):
+        geom = [['H', (0.5, 0.5, 0.5)], ['F', (0, 0, 0)]]
+        cry = Crystal(1, 1, 1, 90, 90, 90, geom, 'cP')
+
+        # Cut at long distance (thus not cutting)
+        assert Molecule(geom) == cry.tile(0, 1, 0, 1, 0, 1, cut=[(9, 9, 9), (1, 1, 1)])
+
+        # Cut everything
+        assert Molecule() == cry.tile(-1, 1, -1, 1, -1, 1, cut=[(-9, -9, -9), (1, 1, 1)])
+
+        # Cut off extra tiling
+        assert Molecule(geom) == cry.tile(0, 9, 0, 1, 0, 1, cut=[(1, 0, 0), (1, 0, 0)])
+
+        # Cut off plane
+        assert len(cry.tile(0, 9, 0, 9, 0, 9, cut=[(0, 1, 0), (0, 1, 0)])) == 162
+
+        # Cut off plane2
+        assert len(cry.tile(-2, 2, -2, 2, -2, 2, cut=[(0, 0, 0), (1, 1, 1)])) == 76
 
 
 class TestCubicCrystal:
