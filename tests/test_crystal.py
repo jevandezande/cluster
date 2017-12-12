@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 
-from qgrep.molecule import Molecule
+from cluster.molecule import Molecule
 from cluster.crystal import Crystal, CubicCrystal, RectangularCrystal
 
 import pytest

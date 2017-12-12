@@ -2,6 +2,8 @@
 import os
 import sys
 
+from cluster.molecule import Molecule
+
 import pytest
 
 from pytest import approx
@@ -35,7 +37,9 @@ O       0.00000000    0.00000000    1.00000000 -1.0000"""
 
         cmol.append('W', [4, 5, 6], -8)
         assert len(cmol) == 2
+        assert cmol.atoms == ['O', 'W']
         assert cmol.charge == -9
+        assert cmol.xyz == approx(np.array([(0, 0, 1), (4, 5, 6)]))
 
     def test_read_from(self):
         geom = [['H', (0, 0, 0), 0],

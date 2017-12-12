@@ -1,8 +1,8 @@
-from collections import Counter
-from qgrep.molecule import Molecule
-
 import itertools
 import numpy as np
+
+from .molecule import Molecule
+from collections import Counter
 
 
 class Crystal:

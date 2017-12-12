@@ -1,5 +1,6 @@
 import numpy as np
-from qgrep.molecule import Molecule
+
+from .molecule import Molecule
 
 
 class CMolecule(Molecule):
