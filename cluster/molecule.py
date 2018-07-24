@@ -16,6 +16,12 @@ class Molecule:
         """Return the number of atoms in the molecule"""
         return len(self.atoms)
 
+    def __repr__(self):
+        mol = ''
+        for a, n in Counter(atom for atom in self.atoms):
+            mol += f'{a}{n}'
+        return f"<{type(self).__class__} {mol}>"
+
     def __str__(self):
         """
         Returns a string of the geometry, filling out positions with zeros and
