@@ -91,6 +91,15 @@ class Molecule:
         self.atoms.append(atom)
         self.xyz = np.append(self.xyz, np.array(xyz)[np.newaxis, ...], axis=0)
 
+    def shifted(self, x, y, z):
+        """
+        Generated a shifted molecule in the specified direction
+        :params x, y, z: the magnitude to shift in each direction
+        """
+        mol = Molecule(self.geom)
+        mol.xyz = mol.xyz + np.array([x, y, z])
+        return mol
+
     @staticmethod
     def check_atom(atom, xyz):
         """ Check if an atom is properly formatted
