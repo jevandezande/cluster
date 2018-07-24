@@ -14,5 +14,4 @@ support for other codes would be greatly appreciated).
 
 ## Requirements
 
-* sq - submission to cluster
 * cclib - reading of output files
