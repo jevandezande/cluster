@@ -3,3 +3,4 @@ MANIFEST
 dist
 *.pyc
 .cache
+.tox
